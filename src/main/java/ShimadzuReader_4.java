@@ -58,7 +58,6 @@
  * 
  */
 
-
 /***********************************************************************************
  * File header of Shimadzu microCT files
  *
@@ -129,194 +128,187 @@ No. 	Type 	Name	Application
 ***********************************************************************************
 */
 
-import ij.plugin.filter.PlugInFilter;
-import ij.*;
-import ij.io.*;
-import ij.gui.*;
-import ij.process.*;
-import ij.measure.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Locale;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.gui.GenericDialog;
+import ij.io.FileInfo;
+import ij.io.OpenDialog;
+import ij.measure.Calibration;
+import ij.plugin.filter.PlugInFilter;
+import ij.process.ImageProcessor;
 
-public class ShimadzuReader_4 implements PlugInFilter  {
+public class ShimadzuReader_4 implements PlugInFilter {
 
-private String path;   
-static ImagePlus orgImg;
-FileInfo fi;
-Calibration cal; 
-Calibration calOrg;
-boolean infFileFound = true;
-String label;
-String defaultDir;
+	static ImagePlus orgImg;
+	FileInfo fi;
+	Calibration cal;
+	Calibration calOrg;
+	boolean infFileFound = true;
+	String label;
+	String defaultDir;
+	private String path;
 
-    
-   public int setup(String arg, ImagePlus imp)
-    {
-        orgImg = imp;
-        fi = imp.getFileInfo();
-        cal = imp.getCalibration();
-        calOrg = cal.copy();
-        
-        // hiermit bekomme ich den vollständigen Pfad inkl. \ am Ende
-            defaultDir = OpenDialog.getDefaultDirectory();    
-            System.out.println("defDir: "+ defaultDir);
+	public int setup(String arg, ImagePlus imp) {
+		orgImg = imp;
+		fi = imp.getFileInfo();
+		cal = imp.getCalibration();
+		calOrg = cal.copy();
 
-            ImageStack stack = imp.getStack();
-            label = stack.getSliceLabel(1);
-            System.out.println("slicelabel: "+label);
-            
-            fi.directory = defaultDir;
-            fi.fileName = label;
-            
-            path = defaultDir + label;
-          
-            return DOES_8G+DOES_16+DOES_32;
-  }
+		// hiermit bekomme ich den vollständigen Pfad inkl. \ am Ende
+		defaultDir = OpenDialog.getDefaultDirectory();
+		System.out.println("defDir: " + defaultDir);
 
+		ImageStack stack = imp.getStack();
+		label = stack.getSliceLabel(1);
+		System.out.println("slicelabel: " + label);
 
-public void run(ImageProcessor processor) {
+		fi.directory = defaultDir;
+		fi.fileName = label;
 
-        checkFile(path);
+		path = defaultDir + label;
 
-        System.out.println("boolean: "+infFileFound);
+		return DOES_8G + DOES_16 + DOES_32;
+	}
 
-        if (infFileFound == false) 
-        {
-            negativeFeedback();
-            return;
-        }
+	public void run(ImageProcessor processor) {
 
+		checkFile(path);
 
-        String infFileName = labelTif2Inf(label);
+		System.out.println("boolean: " + infFileFound);
 
-        fi.unit="mm";
-        cal.setUnit("mm");
+		if (infFileFound == false) {
+			negativeFeedback();
+			return;
+		}
 
-        path = defaultDir + infFileName;
-        System.out.println("path: "+path);
+		String infFileName = labelTif2Inf(label);
 
-    
-		
-        // O P E N inf-File
-       
-        FileInputStream fis;
-        try
-            {
-            fis = new FileInputStream(path);
-            }
-        catch ( FileNotFoundException e )
-            {
-            IJ.log("Inf-File not found" + e);
-            System.out.println( "Inf-File not found - fis exception" );
-            return;
-            }
-        
-            LEDataInputStream ledis = new LEDataInputStream( fis );
-            try {       
-               for (int i = 0; i < 704; i++){
-                   // erst wird das signed Byte in ein Int gecastet, dann wird das int in Char gecastet.
-                    ledis.readByte();
-               }
- 
-               double d1 = ledis.readDouble();
-               System.out.println("dFovXY: "+d1);
+		fi.unit = "mm";
+		cal.setUnit("mm");
 
-               double d2 = ledis.readDouble();
-               System.out.println("dFovZ: "+d2);
+		path = defaultDir + infFileName;
+		System.out.println("path: " + path);
 
-               double d3 = ledis.readDouble();
-               System.out.println("dPitchX: "+d3);
+		// O P E N inf-File
 
-               double d4 = ledis.readDouble();
-               System.out.println("dPitchY: "+d4);
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(path);
+		} catch (FileNotFoundException e) {
+			IJ.log("Inf-File not found" + e);
+			System.out.println("Inf-File not found - fis exception");
+			return;
+		}
 
-               double d5 = ledis.readDouble();
-               System.out.println("dSlicePitch: "+d5); 
-                
-               ledis.close();
-                
-               cal.pixelWidth = d3;
-               cal.pixelHeight = d4;
-               cal.pixelDepth = d5;
+		LEDataInputStream ledis = new LEDataInputStream(fis);
+		try {
+			for (int i = 0; i < 704; i++) {
+				// erst wird das signed Byte in ein Int gecastet, dann wird das int in Char
+				// gecastet.
+				ledis.readByte();
+			}
 
-         }
-        catch ( IOException e )
-            {
-            IJ.log("Error opening LEDataInputStream" + e);
-            System.out.println( "Unexpected IOException opening LEDataInputStream" );
-            return;
-            }      
-            
-          orgImg.setCalibration(cal);  
-          positiveFeedback ();
-   }   
+			double d1 = ledis.readDouble();
+			System.out.println("dFovXY: " + d1);
 
-void negativeFeedback (){
-    
-        GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
+			double d2 = ledis.readDouble();
+			System.out.println("dFovZ: " + d2);
 
-        gd.addMessage("Header-file could not be found");
-        gd.addMessage("Please check that it is in the same directory");
-        gd.addMessage("as the Tif-File sequence");
+			double d3 = ledis.readDouble();
+			System.out.println("dPitchX: " + d3);
 
-        gd.showDialog();
-        if (gd.wasCanceled()) {
-        }   
-} 
-  
-void positiveFeedback (){
+			double d4 = ledis.readDouble();
+			System.out.println("dPitchY: " + d4);
 
-        GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
+			double d5 = ledis.readDouble();
+			System.out.println("dSlicePitch: " + d5);
 
-        String text1= "pixelSize in x: " + formatDouble(cal.pixelWidth) + " " + fi.unit;
-        String text2= "pixelSize in y: " + formatDouble(cal.pixelHeight) + " " + fi.unit;
-        String text3= "pixelSize in z: " + formatDouble(cal.pixelDepth) + " " + fi.unit;
+			ledis.close();
 
-        gd.addMessage("Header-file successfully read!");
-        gd.addMessage("Click 'OK', if the following data are correct!");
-        gd.addMessage(text1);
-        gd.addMessage(text2);
-        gd.addMessage(text3);
+			cal.pixelWidth = d3;
+			cal.pixelHeight = d4;
+			cal.pixelDepth = d5;
 
-        gd.showDialog();
-        if (gd.wasCanceled()) {
+		} catch (IOException e) {
+			IJ.log("Error opening LEDataInputStream" + e);
+			System.out.println("Unexpected IOException opening LEDataInputStream");
+			return;
+		}
 
-        cal = calOrg.copy();
-        orgImg.setCalibration(cal);
-        System.out.println("Original calibration info restored");
+		orgImg.setCalibration(cal);
+		positiveFeedback();
+	}
 
-    }
-}  
-  
-boolean checkFile(String path){
-           File infFile = new File(path);
-           if (infFile.exists()==true){
-               System.out.println("inf-File found at "+ path);
-               return infFileFound = true;
-           }
-           else {
-               System.out.println("no inf-File found at "+ fi.directory);
-               return infFileFound = false;
-           }
+	void negativeFeedback() {
+
+		GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
+
+		gd.addMessage("Header-file could not be found");
+		gd.addMessage("Please check that it is in the same directory");
+		gd.addMessage("as the Tif-File sequence");
+
+		gd.showDialog();
+		if (gd.wasCanceled()) {
+		}
+	}
+
+	void positiveFeedback() {
+
+		GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
+
+		String text1 = "pixelSize in x: " + formatDouble(cal.pixelWidth) + " " + fi.unit;
+		String text2 = "pixelSize in y: " + formatDouble(cal.pixelHeight) + " " + fi.unit;
+		String text3 = "pixelSize in z: " + formatDouble(cal.pixelDepth) + " " + fi.unit;
+
+		gd.addMessage("Header-file successfully read!");
+		gd.addMessage("Click 'OK', if the following data are correct!");
+		gd.addMessage(text1);
+		gd.addMessage(text2);
+		gd.addMessage(text3);
+
+		gd.showDialog();
+		if (gd.wasCanceled()) {
+
+			cal = calOrg.copy();
+			orgImg.setCalibration(cal);
+			System.out.println("Original calibration info restored");
+
+		}
+	}
+
+	boolean checkFile(String path) {
+		File infFile = new File(path);
+		if (infFile.exists() == true) {
+			System.out.println("inf-File found at " + path);
+			return infFileFound = true;
+		} else {
+			System.out.println("no inf-File found at " + fi.directory);
+			return infFileFound = false;
+		}
+	}
+
+	String labelTif2Inf(String orgLabel) {
+		String oldLabel = orgLabel;
+
+		String newLabel = oldLabel.replace(".tif", ".inf");
+		System.out.println("Methode: labelTif2Inf: " + newLabel);
+		return newLabel;
+	}
+
+	public String formatDouble(double in) {
+
+		Locale.setDefault(Locale.US);
+
+		DecimalFormat format = new DecimalFormat("#,##0.0000");
+		return format.format(in);
+
+	}
 }
-  
-String labelTif2Inf (String orgLabel){
-    String oldLabel = orgLabel;
-    
-    String newLabel = oldLabel.replace(".tif", ".inf");
-    System.out.println("Methode: labelTif2Inf: " + newLabel);
-    return newLabel;
-}
-
-public String formatDouble(double in){
-    
-    Locale.setDefault(Locale.US);
-
-    DecimalFormat format = new DecimalFormat("#,##0.0000");
-    return format.format(in);
-
-}
-}
-
