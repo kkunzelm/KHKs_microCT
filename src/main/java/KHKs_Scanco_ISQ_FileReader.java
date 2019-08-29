@@ -191,7 +191,6 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 	private int bytesPerPixel, bufferSize, byteCount, nPixels;
 	private int eofErrorCount;
 	private ImagePlus imp;
-	private String scancoHeaderdata;
 
 	public void run(String arg) {
 
@@ -245,7 +244,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			imp = openScancoISQ(path, downsample, startX, startY, endX, endY, startZ, nSlices);
 			imp.show();
 
-			scancoHeaderdata = getHeaderData(path); // KHK new 30.8.12
+			String scancoHeaderdata = getHeaderData(path); // KHK new 30.8.12
 			// System.out.println("returned headerdata string: " + scancoHeaderdata); // KHK
 			// new 30.8.12
 			imp.setProperty("Info", addsNewContentToImagePlusPropertyInfo(scancoHeaderdata)); // KHK new 30.8.12
@@ -256,8 +255,8 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 	}
 
 	/** Opens a stack of images. */
-	public ImagePlus openScancoISQ(String path, boolean downsample, int startX, int startY, int endX, int endY,
-			int startZ, int nSlices) {
+	private ImagePlus openScancoISQ(String path, boolean downsample, int startX, int startY, int endX, int endY,
+									int startZ, int nSlices) {
 
 		int[] imageSize = getImageSize(path);
 		int width = imageSize[0];
@@ -298,11 +297,8 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			nSlices = getImageSize(path)[2] - startZ;
 		}
 
-		if (offset <= Integer.MAX_VALUE && offset > 0) {
+		if (offset > 0) {
 			fi.offset = offset;
-		}
-		if (offset > Integer.MAX_VALUE) {
-			fi.longOffset = offset;
 		}
 		fi.nImages = nSlices;
 		fi.gapBetweenImages = 0;
@@ -320,7 +316,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		final int widthROI = endX - startX + 1;
 		final int heightROI = endY - startY + 1;
 
-		if (downsample == true) {
+		if (downsample) {
 
 			fi.pixelWidth = fi.pixelWidth * 2;
 			fi.pixelHeight = fi.pixelHeight * 2;
@@ -386,7 +382,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 					}
 				}
 
-				if (downsample == true) {
+				if (downsample) {
 					// System.out.println("Downsample loop ... ");
 					float[] downsampledPixels32 = new float[(widthROI * heightROI) / (2 * 2)];
 					// float[] downsampledPixels32_temp = new
@@ -589,7 +585,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			while (bytesRead < skipCount) {
 				count = in.skip(skipCount - bytesRead);
 				skipAttempts++;
-				if (count == -1 || skipAttempts > 5) {
+				if (skipAttempts > 5) {
 					break;
 				}
 				bytesRead += count;
@@ -607,31 +603,31 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		}
 	}
 
-	public boolean isScancoISQ(String path) {
+	private boolean isScancoISQ(String path) {
         return getMagic(path).equals(MAGIC);
 	}
 
-	public String getMagic(String path) {
+	private String getMagic(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
 		try {
 			File iFile = new File(path);
 			FileInputStream p = new FileInputStream(iFile);
-			String magic = "";
+			StringBuilder magic = new StringBuilder();
 			for (int kh = 0; kh < 16; kh++) {
 				char ch = (char) p.read();
-				magic += ch;
+				magic.append(ch);
 			}
 			p.close();
-			return magic;
+			return magic.toString();
 		} catch (IOException e) {
 			IJ.handleException(e);
 		}
 		return null;
 	}
 
-	public int[] getImageSize(String path) {
+	private int[] getImageSize(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -653,7 +649,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		return null;
 	}
 
-	public double[] getRealSize(String path) {
+	private double[] getRealSize(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -676,15 +672,14 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		return null;
 	}
 
-	public double[] getPixelSize(String path) {
+	private double[] getPixelSize(String path) {
 		int[] numberOfPixels = getImageSize(path);
 		double[] realSize = getRealSize(path);
-		double[] pixelSize = {realSize[0] / numberOfPixels[0], realSize[1] / numberOfPixels[1],
+		return new double[]{realSize[0] / numberOfPixels[0], realSize[1] / numberOfPixels[1],
 				realSize[2] / numberOfPixels[2]};
-		return pixelSize;
 	}
 
-	public int getMuScaling(String path) {
+	private int getMuScaling(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -701,7 +696,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		return -1;
 	}
 
-	public String getName(String path) {
+	private String getName(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -709,21 +704,21 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			File iFile = new File(path);
 			FileInputStream p = new FileInputStream(iFile);
 			p.skip(128);
-			String name = "";
+			StringBuilder name = new StringBuilder();
 			for (int kh = 0; kh < 40; kh++) {
 				char ch = (char) p.read();
-				name += ch;
+				name.append(ch);
 				// System.out.println(nameStringInHeader);
 			}
 			p.close();
-			return name;
+			return name.toString();
 		} catch (IOException e) {
 			IJ.handleException(e);
 		}
 		return null;
 	}
 
-	public int getOffset(String path) {
+	private int getOffset(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -740,7 +735,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		return -1;
 	}
 
-	public String getHeaderData(String path) {
+	private String getHeaderData(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -759,7 +754,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			String scannerType = "     Scanner_type : ";
 			String sampleTimeUs = "       Sampletime : "; // Us = microseconds
 			String indexMeasurement = "Measurement Index : ";
-			String patientName = "    Patient Name  : ";
+			StringBuilder patientName = new StringBuilder("    Patient Name  : ");
 			String energy = "           Energy : ";
 			String intensity = "        Intensity : ";
 
@@ -805,9 +800,9 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 
 			for (int kh = 0; kh < 40; kh++) {
 				char ch = (char) p.read();
-				patientName += ch;
+				patientName.append(ch);
 			}
-			patientName += "\n";
+			patientName.append("\n");
 
 			energy += (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536) + "[V]"
 					+ "\n";
@@ -882,7 +877,7 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 		 * everything worked fine.
 		 */
 
-		String hexString = "";
+		StringBuilder hexString = new StringBuilder();
 
 		// OpenVMS VAX, OpenVMS Alpha and OpenVMS I64 (as well as all Microsoft Windows
 		// implementations)
@@ -895,15 +890,15 @@ public class KHKs_Scanco_ISQ_FileReader implements PlugIn {
 			// if ...else loop: just necessary to format the byte in the string correct for
 			// later use
 			if (timestampByteSequenceFromISQFile[index] > 0xf) {
-				hexString += Integer.toHexString(timestampByteSequenceFromISQFile[index]);
+				hexString.append(Integer.toHexString(timestampByteSequenceFromISQFile[index]));
 			} else {
-				hexString += "0" + Integer.toHexString(timestampByteSequenceFromISQFile[index]);
+				hexString.append("0").append(Integer.toHexString(timestampByteSequenceFromISQFile[index]));
 			}
 		}
 
 		// KHK debug: System.out.print("hexstring: Big Endian "+ hexString+" # ");
 
-		BigInteger bi = new BigInteger(hexString, 16);
+		BigInteger bi = new BigInteger(hexString.toString(), 16);
 		BigInteger epochAsBigInteger = new BigInteger("007C95674BEB4000", 16); // 007C95674BEB4000 = 1.1.1970;
 
 		bi = bi.subtract(epochAsBigInteger);

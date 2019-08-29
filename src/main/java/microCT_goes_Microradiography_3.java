@@ -53,11 +53,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Locale;
 
 import javax.swing.*;
@@ -71,59 +69,54 @@ import ij.text.TextPanel;
 
 public class microCT_goes_Microradiography_3 implements PlugInFilter {
 
-	static ImagePlus orgImg;
-	public int startProfile;
-	public int readFirstEnamelPoint;
-	Graph graph;
-	double[] originalData;
-	double[] yAxis;
-	int points;
-	double xScale;
-	double yScale;
-	int startX;
-	int startY;
-	Point startEnamel;
-	Point startReferenceLevel; // KH
-	Point endReferenceLevel; // KH
-	Point startIntegral; // KH
-	Point endIntegral; // KH
-	int temp2switch, startRL, endRL, startI, endI; // RL = ReferenceLevel, I = integral;
-	int numberOfClicks; // wieoft wurde mit der Maus geklickt, um Punkte zu markieren
-	double deltaZ;
-	int noOfPointsInIntegral;
-	int startPointIntegral;
-	int endPointIntegral;
-	double avgMineralLoss;
-	Point startGraph;
-	int actualX;
-	int actualY;
-	JFrame frame;
-	JMenu menu;
-	JMenuBar bar;
-	JMenuItem resetItem;
+	private static ImagePlus orgImg;
+//	private int startProfile;
+	private Graph graph;
+	private double[] originalData;
+	private double[] yAxis;
+	private double xScale;
+	private double yScale;
+	private int startX;
+	private int startY;
+	private Point startEnamel;
+	private Point startReferenceLevel; // KH
+	private Point endReferenceLevel; // KH
+	private Point startIntegral; // KH
+	private Point endIntegral; // KH
+	private int startRL;
+	private int endRL;
+	private int startI;
+	private int endI; // RL = ReferenceLevel, I = integral;
+	private int numberOfClicks; // wieoft wurde mit der Maus geklickt, um Punkte zu markieren
+	private double deltaZ;
+	private int noOfPointsInIntegral;
+	private int startPointIntegral;
+	private int endPointIntegral;
+	private double avgMineralLoss;
+	private Point startGraph;
+	private int actualX;
+	private int actualY;
+	private JFrame frame;
+	private final JMenu menu;
+	private final JMenuBar bar;
 	// JMenuItem openfile;
-	JMenuItem savefile;
-	JMenuItem table;
-	JMenuItem export;
-	JMenuItem beenden;
-	// KH: JButton reset;
-	java.util.List data;
-	int firstEnamelPoint;
+	private final JMenuItem savefile;
+	private final JMenuItem table;
+	private final JMenuItem export;
+	private final JMenuItem beenden;
+	private final int firstEnamelPoint;
 	// double subSurfaceLayerX;
 	// double subSurfaceLayerY;
 	// double lesionBodyX;
 	// double lesionBodyY;
-	double pixelWidthOfVoxelElement;
-	double lesionWidth;
-	double lesionDepth;
-	boolean chooseStart;
-	int[] xPoints;
-	int[] yPoints;
-	int imageType;
-	String voxelSizeUnit;
-	String textForTextPanel;
-	String headerForTextPanel;
-	int numberOfXPixels;
+	private double pixelWidthOfVoxelElement;
+	private double lesionDepth;
+	private boolean chooseStart;
+	private int imageType;
+	private String voxelSizeUnit;
+	private String textForTextPanel;
+	private String headerForTextPanel;
+	private int numberOfXPixels;
 	private boolean avgCalculated;
 	private boolean deltaZCalculated;
 	private double calculatedAvg;
@@ -133,7 +126,6 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		originalData = new double[0];
 		yAxis = new double[0];
 
-		points = 0;
 		xScale = 0;
 		yScale = 0;
 		startEnamel = null;
@@ -141,7 +133,6 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		endReferenceLevel = null; // KH
 		startIntegral = null; // KH
 		endIntegral = null; // KH
-		temp2switch = 0;
 		startRL = 0;
 		endRL = 0;
 		startI = 0;
@@ -152,20 +143,18 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		frame = null;
 		menu = new JMenu("Datei");
 		bar = new JMenuBar();
-		resetItem = new JMenuItem("Reset");
+//		JMenuItem resetItem = new JMenuItem("Reset");
 		// KH: openfile = new JMenuItem("Open File");
 		savefile = new JMenuItem("Save File");
 		table = new JMenuItem("TableView");
 		export = new JMenuItem("Export");
 		beenden = new JMenuItem("Beenden");
 		// KH: reset = new JButton("Reset");
-		data = new ArrayList();
+		// KH: JButton reset;
 		firstEnamelPoint = -1;
 
-		lesionWidth = 0.0D;
 		lesionDepth = 0.0D;
 		chooseStart = false;
-		readFirstEnamelPoint = -1;
 		avgCalculated = false;
 		deltaZCalculated = false;
 
@@ -291,23 +280,18 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		savefile.setAction(save);
 	}
 
-	String saveAs(String dir) // muss da ein string zurückgegeben werden ? falls nein, dann wäre return ""
-								// nicht nötig und es würde return allein reichen
-	{
+	private void saveAs(String dir)	{
 		JFileChooser c;
 		FileOutputStream fos;
 		File file;
 		byte[] bytedata;
 		c = new JFileChooser(new File(dir));
-		fos = null;
-		file = null;
-		bytedata = null;
-		StringBuffer output = new StringBuffer();
+		StringBuilder output = new StringBuilder();
 		for (int i = 0; i < originalData.length; i++)
 			output.append(originalData[i]).append(i != originalData.length - 1 ? "#" : "");
 
 		output.append(";");
-		output.append(startProfile).append(";");
+//		output.append(startProfile).append(";");
 		output.append(startGraph == null ? " " : startGraph.getX() + "#" + startGraph.getY()).append(";");
 		output.append(firstEnamelPoint).append(";");
 		output.append(startEnamel == null ? " " : startEnamel.getX() + "#" + startEnamel.getY()).append(";");
@@ -315,27 +299,19 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 
 		// *************************************
 
-		if (c.showSaveDialog(frame) != 0) {
-			c = null;
-			return ""; // wohin??
-		} else {
+		if (c.showSaveDialog(frame) == 0) {
 			file = c.getSelectedFile();
 			if (file != null) {
 				try {
 					fos = new FileOutputStream(file);
 					fos.write(bytedata);
 					fos.flush();
-					c = null;
-					return "";
 				} catch (Exception e) {
 					JOptionPane.showMessageDialog(frame, "Error, file not saved");
-					c = null;
-					return "";
 				}
 
 			}
 
-			return ""; // kh unsauber
 		}
 	}
 	/*
@@ -400,27 +376,23 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		FileOutputStream fos = null;
 		try {
 			fos = new FileOutputStream(new File("C:\\microct_data.csv"));
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < yAxis.length; i++)
-				sb.append(i + ";" + String.valueOf(yAxis[i]).replace('.', ',') + ";\n");
+				sb.append(i).append(";").append(String.valueOf(yAxis[i]).replace('.', ',')).append(";\n");
 
 			fos.write(sb.toString().getBytes());
 			fos.flush();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			if (fos != null)
 				try {
 					fos.close();
-				} catch (Exception exception1) {
-				}
+				} catch (Exception ignored) { }
 		}
-		return;
 	}
 
-	public void showImportantData() {
+	private void showImportantData() {
 		final TextPanel textPanel = new TextPanel("Title");
 
 		/*
@@ -443,27 +415,21 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		JButton but = new JButton("Copy to Clipboard...");
 		JButton butHeader = new JButton("Copy Header to Clipboard...");
 
-		but.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e1) {
-				// System.out.println("KH:3.4.08 "+textImportantData);
-				// textPanel.saveAs("");
-				TextTransfer textTransfer = new TextTransfer();
-				textTransfer.setClipboardContents(textForTextPanel);
-			}
+		but.addActionListener(e1 -> {
+			// System.out.println("KH:3.4.08 "+textImportantData);
+			// textPanel.saveAs("");
+			TextTransfer textTransfer = new TextTransfer();
+			textTransfer.setClipboardContents(textForTextPanel);
 		});
 
-		butHeader.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e2) {
-				// System.out.println("KH:3.4.08 "+textImportantData);
-				// textPanel.saveAs("");
-				TextTransfer textTransfer = new TextTransfer();
-				textTransfer.setClipboardContents(headerForTextPanel);
-			}
+		butHeader.addActionListener(e2 -> {
+			// System.out.println("KH:3.4.08 "+textImportantData);
+			// textPanel.saveAs("");
+			TextTransfer textTransfer = new TextTransfer();
+			textTransfer.setClipboardContents(headerForTextPanel);
 		});
 
-		BoxLayout box = new BoxLayout(tw.getContentPane(), 1);
+		BoxLayout box = new BoxLayout(tw.getContentPane(), BoxLayout.Y_AXIS);
 		tw.getContentPane().setLayout(box);
 		tw.getContentPane().add(textPanel);
 		tw.getContentPane().add(but);
@@ -472,7 +438,7 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		tw.setVisible(true);
 	}
 
-	public String formatDouble(double in) {
+	private String formatDouble(double in) {
 		Locale.setDefault(Locale.US);
 		if (imageType == 4) {
 			DecimalFormat format = new DecimalFormat("#,##0.000");
@@ -487,7 +453,7 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 
 	}
 
-	public String formatDoubleY(double in) {
+	private String formatDoubleY(double in) {
 		Locale.setDefault(Locale.US);
 		if (imageType == 4) {
 			DecimalFormat format = new DecimalFormat("#,##0.000");
@@ -499,36 +465,34 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 
 	}
 
-	public void chooseStart(int startPoint) {
-		// System.out.println("given start point is: " + startPoint);
-		double[] temp = new double[yAxis.length];
-		for (int i = 0; i < yAxis.length; i++) {
-			temp[i] = yAxis[i];
-			// System.out.println("YAXIS:" + yAxis[i]);
-		}
+// --Commented out by Inspection START (2019-08-29 12:55):
+//	public void chooseStart(int startPoint) {
+//		// System.out.println("given start point is: " + startPoint);
+//		double[] temp = new double[yAxis.length];
+//		// System.out.println("YAXIS:" + yAxis[i]);
+//		System.arraycopy(yAxis, 0, temp, 0, yAxis.length);
+//
+//		yAxis = new double[temp.length - startPoint];
+//		for (int i = startPoint; i < temp.length; i++)
+//			yAxis[i - startPoint] = temp[i];
+//
+//	}
+// --Commented out by Inspection STOP (2019-08-29 12:55)
 
-		yAxis = new double[temp.length - startPoint];
-		for (int i = startPoint; i < temp.length; i++)
-			yAxis[i - startPoint] = temp[i];
-
-	}
-
-	public void resetData() {
+	private void resetData() {
 
 		// in den nächsten drei Zeilen werden die OriginalPlot-Daten aus dem
 		// Originalarray
 		// in den yAxis[] Array kopiert.
 
 		yAxis = new double[originalData.length];
-		for (int i = 0; i < originalData.length; i++)
-			yAxis[i] = originalData[i];
+		System.arraycopy(originalData, 0, yAxis, 0, originalData.length);
 
 		chooseStart = false;
 		export.setEnabled(true);
 		startEnamel = null;
 		startGraph = null;
 		avgMineralLoss = 0.0D;
-		lesionWidth = 0.0D;
 		lesionDepth = 0.0D;
 		avgCalculated = false;
 		deltaZCalculated = false;
@@ -543,12 +507,11 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 		/**
 		 * xPoints = new int[1]; yPoints = new int[1]; xPoints[0]=0; yPoints[0]=0;
 		 **/
-		return;
 	}
 
 	public class Graph extends JPanel implements MouseMotionListener, MouseListener {
 
-		private boolean painted;
+//		private boolean painted;
 
 		Graph() {
 			setPreferredSize(new Dimension(900, 700));
@@ -705,9 +668,9 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 			// **************************************************************************
 			// DeltaZ-Integral wird visuell dargestellt
 
-			if (deltaZCalculated == true) {
-				xPoints = new int[noOfPointsInIntegral + 3]; // KH: 13.04.2008 warum steht hier +2 ??
-				yPoints = new int[noOfPointsInIntegral + 3]; // weil bei einem Polygon auch die noch die linke und obere
+			if (deltaZCalculated) {
+				int[] xPoints = new int[noOfPointsInIntegral + 3]; // KH: 13.04.2008 warum steht hier +2 ??
+				int[] yPoints = new int[noOfPointsInIntegral + 3]; // weil bei einem Polygon auch die noch die linke und obere
 																// Ecke hinzukommen
 																// und auch die Begrenzung rechts unten noch stimmen
 																// muss
@@ -813,7 +776,7 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 			// *****************************************************************************************************
 			// Anzeigen der Ergebnisse in Textform:
 			g.setColor(Color.BLACK);
-			if (avgCalculated == true) {
+			if (avgCalculated) {
 				int startYText = startY + 60;
 				g.drawString("Average ReferenceLevel 100%: " + formatDouble(calculatedAvg), 130, startYText + 30);
 				g.drawString("Average ReferenceLevel  95%: " + formatDouble(calculatedAvg * 0.95), 130,
@@ -916,21 +879,20 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 			// ich fange das hier ab, indem ich alle x-Koordinaten auf die Länge der
 			// Kurve beschränke.
 
-			Point p = e;
-			actualX = (int) p.getX(); // aktuelle Mouseposition X
-			actualY = (int) p.getY(); // aktuelle Mouseposition Y
+			actualX = (int) e.getX(); // aktuelle Mouseposition X
+			actualY = (int) e.getY(); // aktuelle Mouseposition Y
 			if (actualX > numberOfXPixels + startX) {
-				p.setLocation((numberOfXPixels + startX) - xScale, actualY); // numberOfXPixels + startX = ist max.
+				e.setLocation((numberOfXPixels + startX) - xScale, actualY); // numberOfXPixels + startX = ist max.
 																				// Wertebereich in x, xScale = 1 Punkt
 																				// weniger, dadruch habe ich dann beim
 																				// Zeichnen des Integrals kein Problem
 																				// mit dem Index von yAxis
 			}
 			if (actualX < startX) {
-				p.setLocation(startX, actualY); // startX = ist min. Wertebereich von x
+				e.setLocation(startX, actualY); // startX = ist min. Wertebereich von x
 			}
 
-			return p;
+			return e;
 
 		}
 
@@ -989,14 +951,14 @@ public class microCT_goes_Microradiography_3 implements PlugInFilter {
 			//
 
 			if (startReferenceLevel != null && endReferenceLevel != null) {
-				if (avgCalculated == false) {
+				if (!avgCalculated) {
 					calculateAverage();
 				}
 				avgCalculated = true;
 			}
 
 			if (startIntegral != null && endIntegral != null) {
-				if (deltaZCalculated == false) {
+				if (!deltaZCalculated) {
 					calculateDeltaZ();
 				}
 				deltaZCalculated = true;

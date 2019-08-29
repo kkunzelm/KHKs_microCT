@@ -17,17 +17,16 @@ public class StackWriter_addedSlicer implements PlugIn {
 
 	// private static String defaultDirectory = null;
 
-	private static String[] choices = {"SlicerRaw", "Tiff", "Gif", "Jpeg", "Bmp", "Raw", "Zip", "Text"};
+	private static final String[] choices = {"SlicerRaw", "Tiff", "Gif", "Jpeg", "Bmp", "Raw", "Zip", "Text"};
 	private static String fileType = "SlicerRaw";
 	private static int ndigits = 3;
 	private static int startAt;
 	private static boolean useLabels = true;
-	ImagePlus imp;
 	// private static boolean startAtZero;
 
 	public void run(String arg) {
 		ImagePlus imp = WindowManager.getCurrentImage();
-		if (imp == null || (imp != null && imp.getStackSize() < 2)) {
+		if (imp == null || imp.getStackSize() < 2) {
 			IJ.error("Stack Writer", "This command requires a stack.");
 			return;
 		}
@@ -69,22 +68,32 @@ public class StackWriter_addedSlicer implements PlugIn {
 			return;
 
 		String extension = "";
-		if (fileType.equals("SclicerRaw"))
-			extension = "";
-		else if (fileType.equals("Tiff"))
-			extension = ".tif";
-		else if (fileType.equals("Jpeg"))
-			extension = ".jpg";
-		else if (fileType.equals("Gif"))
-			extension = ".gif";
-		else if (fileType.equals("Bmp"))
-			extension = ".bmp";
-		else if (fileType.equals("Raw"))
-			extension = ".raw";
-		else if (fileType.equals("Zip"))
-			extension = ".zip";
-		else if (fileType.equals("Text"))
-			extension = ".txt";
+		switch (fileType) {
+			case "SclicerRaw":
+				extension = "";
+				break;
+			case "Tiff":
+				extension = ".tif";
+				break;
+			case "Jpeg":
+				extension = ".jpg";
+				break;
+			case "Gif":
+				extension = ".gif";
+				break;
+			case "Bmp":
+				extension = ".bmp";
+				break;
+			case "Raw":
+				extension = ".raw";
+				break;
+			case "Zip":
+				extension = ".zip";
+				break;
+			case "Text":
+				extension = ".txt";
+				break;
+		}
 
 		String digits = getDigits(number);
 
@@ -101,6 +110,7 @@ public class StackWriter_addedSlicer implements PlugIn {
 		int nSlices = stack.getSize();
 		String path, path2, label = null;
 
+		label:
 		for (int i = 1; i <= nSlices; i++) {
 			IJ.showStatus("writing: " + i + "/" + nSlices);
 			IJ.showProgress((double) i / nSlices);
@@ -125,30 +135,39 @@ public class StackWriter_addedSlicer implements PlugIn {
 
 			path2 = directory + label + "." + digits;
 
-			if (fileType.equals("Tiff")) {
-				if (!(new FileSaver(tmp).saveAsTiff(path)))
+			switch (fileType) {
+				case "Tiff":
+					if (!(new FileSaver(tmp).saveAsTiff(path)))
+						break label;
 					break;
-			} else if (fileType.equals("Gif")) {
-				if (!(new FileSaver(tmp).saveAsGif(path)))
+				case "Gif":
+					if (!(new FileSaver(tmp).saveAsGif(path)))
+						break label;
 					break;
-			} else if (fileType.equals("Jpeg")) {
-				if (!(new FileSaver(tmp).saveAsJpeg(path)))
+				case "Jpeg":
+					if (!(new FileSaver(tmp).saveAsJpeg(path)))
+						break label;
 					break;
-			} else if (fileType.equals("Bmp")) {
-				if (!(new FileSaver(tmp).saveAsBmp(path)))
+				case "Bmp":
+					if (!(new FileSaver(tmp).saveAsBmp(path)))
+						break label;
 					break;
-			} else if (fileType.equals("Raw")) {
-				if (!(new FileSaver(tmp).saveAsRaw(path)))
+				case "Raw":
+					if (!(new FileSaver(tmp).saveAsRaw(path)))
+						break label;
 					break;
-			} else if (fileType.equals("SlicerRaw")) { // KH
-				if (!(new FileSaver(tmp).saveAsRaw(path2))) // KH
+				case "SlicerRaw":  // KH
+					if (!(new FileSaver(tmp).saveAsRaw(path2))) // KH
+						break label;
 					break;
-			} else if (fileType.equals("Zip")) {
-				tmp.setTitle(name + digits + extension);
-				if (!(new FileSaver(tmp).saveAsZip(path)))
+				case "Zip":
+					tmp.setTitle(name + digits + extension);
+					if (!(new FileSaver(tmp).saveAsZip(path)))
+						break label;
 					break;
-			} else if (fileType.equals("Text")) {
-				if (!(new FileSaver(tmp).saveAsText(path)))
+				case "Text":
+					if (!(new FileSaver(tmp).saveAsText(path)))
+						break label;
 					break;
 			}
 			// System.gc();
@@ -158,7 +177,7 @@ public class StackWriter_addedSlicer implements PlugIn {
 		IJ.register(StackWriter_addedSlicer.class);
 	}
 
-	String getDigits(int n) {
+	private String getDigits(int n) {
 		String digits = "00000000" + (startAt + n);
 		return digits.substring(digits.length() - ndigits);
 	}

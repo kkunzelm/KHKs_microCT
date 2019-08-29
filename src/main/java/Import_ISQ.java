@@ -16,13 +16,10 @@ import ij.plugin.PlugIn;
 /** This plugin implements the Acquire/ISQ command. */
 public class Import_ISQ implements PlugIn {
 
-	private static String defaultDirectory = null;
-	int record = 0;
-	int recCount = 0;
-	int i, offset, offset1, offset2, offset3, xdimension, ydimension, zdimension;
-	int tmpInt;
-	float el_size_mm_x, el_size_mm_y, el_size_mm_z;
-	float tmp_float;
+	private int offset;
+	private int xdimension;
+	private int ydimension;
+	private int zdimension;
 
 	public void run(String arg) {
 
@@ -53,12 +50,12 @@ public class Import_ISQ implements PlugIn {
 			p.skip(1);
 			zdimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
+			int tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
+			float el_size_mm_x = tmpInt / xdimension;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_x = tmpInt / xdimension;
+			float el_size_mm_y = tmpInt / ydimension;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_y = tmpInt / ydimension;
-			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_z = tmpInt / zdimension;
+			float el_size_mm_z = tmpInt / zdimension;
 			el_size_mm_x = el_size_mm_x / 1000;
 			el_size_mm_y = el_size_mm_y / 1000;
 			el_size_mm_z = el_size_mm_z / 1000;

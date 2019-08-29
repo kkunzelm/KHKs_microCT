@@ -38,7 +38,7 @@ public final class TextTransfer implements ClipboardOwner {
 	 * @return any text found on the Clipboard; if none found, return an empty
 	 *         String.
 	 */
-	public String getClipboardContents() {
+	private String getClipboardContents() {
 		String result = "";
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		// odd: the Object param of getContents is not currently used
@@ -47,12 +47,9 @@ public final class TextTransfer implements ClipboardOwner {
 		if (hasTransferableText) {
 			try {
 				result = (String) contents.getTransferData(DataFlavor.stringFlavor);
-			} catch (UnsupportedFlavorException ex) {
+			} catch (UnsupportedFlavorException | IOException ex) {
 				// highly unlikely since we are using a standard DataFlavor
-				System.out.println(ex);
-				ex.printStackTrace();
-			} catch (IOException ex) {
-				System.out.println(ex);
+				System.out.println(ex.getMessage());
 				ex.printStackTrace();
 			}
 		}

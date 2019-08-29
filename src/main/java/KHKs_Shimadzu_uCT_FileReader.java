@@ -147,13 +147,13 @@ import ij.process.ImageProcessor;
 
 public class KHKs_Shimadzu_uCT_FileReader implements PlugInFilter {
 
-	static ImagePlus orgImg;
-	FileInfo fi;
-	Calibration cal;
-	Calibration calOrg;
-	boolean infFileFound = true;
-	String label;
-	String defaultDir;
+	private static ImagePlus orgImg;
+	private FileInfo fi;
+	private Calibration cal;
+	private Calibration calOrg;
+	private boolean infFileFound = true;
+	private String label;
+	private String defaultDir;
 	private String path;
 
 	public int setup(String arg, ImagePlus imp) {
@@ -184,7 +184,7 @@ public class KHKs_Shimadzu_uCT_FileReader implements PlugInFilter {
 
 		System.out.println("boolean: " + infFileFound);
 
-		if (infFileFound == false) {
+		if (!infFileFound) {
 			negativeFeedback();
 			return;
 		}
@@ -247,7 +247,7 @@ public class KHKs_Shimadzu_uCT_FileReader implements PlugInFilter {
 		positiveFeedback();
 	}
 
-	void negativeFeedback() {
+	private void negativeFeedback() {
 
 		GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
 
@@ -256,11 +256,11 @@ public class KHKs_Shimadzu_uCT_FileReader implements PlugInFilter {
 		gd.addMessage("as the Tif-File sequence");
 
 		gd.showDialog();
-		if (gd.wasCanceled()) {
-		}
+//		if (gd.wasCanceled()) {
+//		}
 	}
 
-	void positiveFeedback() {
+	private void positiveFeedback() {
 
 		GenericDialog gd = new GenericDialog("Prof. Kunzelmann's: Import Shimadzu MicroCT Files");
 
@@ -284,26 +284,24 @@ public class KHKs_Shimadzu_uCT_FileReader implements PlugInFilter {
 		}
 	}
 
-	boolean checkFile(String path) {
+	private void checkFile(String path) {
 		File infFile = new File(path);
-		if (infFile.exists() == true) {
+		if (infFile.exists()) {
 			System.out.println("inf-File found at " + path);
-			return infFileFound = true;
+			infFileFound = true;
 		} else {
 			System.out.println("no inf-File found at " + fi.directory);
-			return infFileFound = false;
+			infFileFound = false;
 		}
 	}
 
-	String labelTif2Inf(String orgLabel) {
-		String oldLabel = orgLabel;
-
-		String newLabel = oldLabel.replace(".tif", ".inf");
+	private String labelTif2Inf(String orgLabel) {
+		String newLabel = orgLabel.replace(".tif", ".inf");
 		System.out.println("Methode: labelTif2Inf: " + newLabel);
 		return newLabel;
 	}
 
-	public String formatDouble(double in) {
+	private String formatDouble(double in) {
 
 		Locale.setDefault(Locale.US);
 

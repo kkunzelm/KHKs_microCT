@@ -224,8 +224,8 @@ public class ISQ_Reader implements PlugIn {
 	}
 
 	/** Opens a stack of images. */
-	public ImagePlus openScancoISQ(String path, boolean downsample, int startX, int startY, int endX, int endY,
-			int startZ, int nSlices) {
+	private ImagePlus openScancoISQ(String path, boolean downsample, int startX, int startY, int endX, int endY,
+									int startZ, int nSlices) {
 
 		int[] imageSize = getImageSize(path);
 		int width = imageSize[0];
@@ -266,11 +266,8 @@ public class ISQ_Reader implements PlugIn {
 			nSlices = getImageSize(path)[2] - startZ;
 		}
 
-		if (offset <= Integer.MAX_VALUE && offset > 0) {
+		if (offset > 0) {
 			fi.offset = offset;
-		}
-		if (offset > Integer.MAX_VALUE) {
-			fi.longOffset = offset;
 		}
 		fi.nImages = nSlices;
 		fi.gapBetweenImages = 0;
@@ -288,7 +285,7 @@ public class ISQ_Reader implements PlugIn {
 		final int widthROI = endX - startX + 1;
 		final int heightROI = endY - startY + 1;
 
-		if (downsample == true) {
+		if (downsample) {
 
 			fi.pixelWidth = fi.pixelWidth * 2;
 			fi.pixelHeight = fi.pixelHeight * 2;
@@ -354,7 +351,7 @@ public class ISQ_Reader implements PlugIn {
 					}
 				}
 
-				if (downsample == true) {
+				if (downsample) {
 					// System.out.println("Downsample loop ... ");
 					float[] downsampledPixels32 = new float[(widthROI * heightROI) / (2 * 2)];
 					// float[] downsampledPixels32_temp = new
@@ -554,7 +551,7 @@ public class ISQ_Reader implements PlugIn {
 			while (bytesRead < skipCount) {
 				count = in.skip(skipCount - bytesRead);
 				skipAttempts++;
-				if (count == -1 || skipAttempts > 5) {
+				if (skipAttempts > 5) {
 					break;
 				}
 				bytesRead += count;
@@ -572,31 +569,31 @@ public class ISQ_Reader implements PlugIn {
 		}
 	}
 
-	public boolean isScancoISQ(String path) {
+	private boolean isScancoISQ(String path) {
         return getMagic(path).equals(MAGIC);
 	}
 
-	public String getMagic(String path) {
+	private String getMagic(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
 		try {
 			File iFile = new File(path);
 			FileInputStream p = new FileInputStream(iFile);
-			String magic = "";
+			StringBuilder magic = new StringBuilder();
 			for (int kh = 0; kh < 16; kh++) {
 				char ch = (char) p.read();
-				magic += ch;
+				magic.append(ch);
 			}
 			p.close();
-			return magic;
+			return magic.toString();
 		} catch (IOException e) {
 			IJ.handleException(e);
 		}
 		return null;
 	}
 
-	public int[] getImageSize(String path) {
+	private int[] getImageSize(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -618,7 +615,7 @@ public class ISQ_Reader implements PlugIn {
 		return null;
 	}
 
-	public double[] getRealSize(String path) {
+	private double[] getRealSize(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -641,15 +638,14 @@ public class ISQ_Reader implements PlugIn {
 		return null;
 	}
 
-	public double[] getPixelSize(String path) {
+	private double[] getPixelSize(String path) {
 		int[] numberOfPixels = getImageSize(path);
 		double[] realSize = getRealSize(path);
-		double[] pixelSize = {realSize[0] / numberOfPixels[0], realSize[1] / numberOfPixels[1],
+		return new double[]{realSize[0] / numberOfPixels[0], realSize[1] / numberOfPixels[1],
 				realSize[2] / numberOfPixels[2]};
-		return pixelSize;
 	}
 
-	public int getMuScaling(String path) {
+	private int getMuScaling(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -666,7 +662,7 @@ public class ISQ_Reader implements PlugIn {
 		return -1;
 	}
 
-	public String getName(String path) {
+	private String getName(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}
@@ -674,21 +670,21 @@ public class ISQ_Reader implements PlugIn {
 			File iFile = new File(path);
 			FileInputStream p = new FileInputStream(iFile);
 			p.skip(128);
-			String name = "";
+			StringBuilder name = new StringBuilder();
 			for (int kh = 0; kh < 40; kh++) {
 				char ch = (char) p.read();
-				name += ch;
+				name.append(ch);
 				// System.out.println(nameStringInHeader);
 			}
 			p.close();
-			return name;
+			return name.toString();
 		} catch (IOException e) {
 			IJ.handleException(e);
 		}
 		return null;
 	}
 
-	public int getOffset(String path) {
+	private int getOffset(String path) {
 		if (path == null) {
 			throw new IllegalArgumentException();
 		}

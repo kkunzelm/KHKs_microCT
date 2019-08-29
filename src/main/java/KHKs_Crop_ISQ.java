@@ -26,18 +26,20 @@ import ij.plugin.PlugIn;
 /** This plugin implements the Acquire/ISQ command. */
 public class KHKs_Crop_ISQ implements PlugIn {
 
-	private static String defaultDirectory = null;
-	int i, offset, xdimension, ydimension, zdimension;
-	long skipSlices = 0;
-	int tmpInt;
-	float el_size_mm_x, el_size_mm_y, el_size_mm_z;
-	int startROI, endROI, gapBetweenLines, heightROI, widthROI, nFirstSlice;
-	short[] pixels;
+	private int offset;
+	private int xdimension;
+	private int ydimension;
+	private int zdimension;
+	private float el_size_mm_x;
+	private float el_size_mm_y;
+	private float el_size_mm_z;
+	private int startROI;
+	private int gapBetweenLines;
+	private int heightROI;
+	private int widthROI;
+	private int nFirstSlice;
 	private int width, height;
-	private long skipCount;
 
-	// necessary for the clip ROI
-	private int bytesPerPixel, bufferSize, byteCount, nPixels;
 	private int eofErrorCount;
 	private String path;
 	private int upperLeftX, upperLeftY, lowerRightX, lowerRightY;
@@ -69,7 +71,7 @@ public class KHKs_Crop_ISQ implements PlugIn {
 			p.skip(1);
 			zdimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
+			int tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
 			el_size_mm_x = tmpInt / xdimension;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
 			el_size_mm_y = tmpInt / ydimension;
@@ -87,9 +89,7 @@ public class KHKs_Crop_ISQ implements PlugIn {
 
 			p.close();
 
-		} catch (IOException e) {
-
-		}
+		} catch (IOException ignored) { }
 
 		// Generic dialog to input the ROI-coordinates
 		getRoiCoordinates();
@@ -116,7 +116,7 @@ public class KHKs_Crop_ISQ implements PlugIn {
 	 **/
 
 	// Generic dialog to input the ROI-coordinates
-	void getRoiCoordinates() {
+	private void getRoiCoordinates() {
 
 		GenericDialog gd = new GenericDialog("Coordinates for the input selection");
 
@@ -156,14 +156,6 @@ public class KHKs_Crop_ISQ implements PlugIn {
 		widthROI = lowerRightX - upperLeftX + 1;
 		heightROI = lowerRightY - upperLeftY + 1;
 
-		if (nFirstSlice > 0) {
-
-			// kurze Bemerkung nebenbei: diese Zeile und die Variable skipSlices scheint mir
-			// eigentlich ueberfluessig !!
-
-			skipSlices = (offset + nFirstSlice * width * height * 2); // 2 is hardcoded no. of bytesPerPixel (short)
-		}
-
 		if (zdimension > zdimension - nFirstSlice) {
 			zdimension = zdimension - nFirstSlice; // Frage: könnte die Nullpointer exeption hier begründet sein -
 													// normal von 0 bis n-1, hier ab 1???
@@ -176,7 +168,7 @@ public class KHKs_Crop_ISQ implements PlugIn {
 	 * file, however, it performs a lot of tests to make sure everything is as it
 	 * should be.
 	 */
-	public void copyISQ(String in) throws IOException {
+	private void copyISQ(String in) throws IOException {
 		String to_file = path + "_cropped";
 		FileInputStream from = null;
 		FileOutputStream to = null;
@@ -269,8 +261,6 @@ public class KHKs_Crop_ISQ implements PlugIn {
 				// I copy only the content of the ROI into the buffer which has to be writen to
 				// the Output-Stream
 
-				int temp = 0;
-
 				for (int u = 0; u < heightROI; u++) { // Lines in the ROI buffer
 					for (int v = 0, j = 0; v < widthROI; v++, j = j + 2) { // columns in the ROI buffer
 
@@ -301,16 +291,14 @@ public class KHKs_Crop_ISQ implements PlugIn {
 			if (from != null)
 				try {
 					from.close();
-				} catch (IOException e) {
-                }
+				} catch (IOException ignored) { }
 			if (to != null)
 				try {
 					to.close();
-				} catch (IOException e) {
-                }
+				} catch (IOException ignored) { }
 		}
 	}
-	void eofError() {
+	private void eofError() {
 		eofErrorCount++;
 	}
 

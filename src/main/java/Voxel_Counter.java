@@ -72,13 +72,13 @@ public class Voxel_Counter implements PlugIn {
 
 		int nslices = imp.getStackSize();
 		Roi roi = imp.getRoi();
-		int roiCount = 0;
+		int roiCount;
 		ResultsTable rt;
 		int volumeCount = imp.getWidth() * imp.getHeight() * nslices;
 		if (roi == null)
 			roiCount = volumeCount;
 		else if (roi.getType() == Roi.RECTANGLE) {
-			Rectangle r = roi.getBoundingRect();
+			Rectangle r = roi.getBounds();
 			roiCount = r.width * r.height * nslices;
 		} else {
 			IJ.run("Clear Results");
@@ -90,7 +90,7 @@ public class Voxel_Counter implements PlugIn {
 			rt = Analyzer.getResultsTable();
 			roiCount = 0;
 			for (int i = 0; i < rt.getCounter(); i++)
-				roiCount += rt.getValue(ResultsTable.AREA, i);
+				roiCount += rt.getValueAsDouble(ResultsTable.AREA, i);
 		}
 
 		IJ.run("Clear Results");
@@ -104,7 +104,7 @@ public class Voxel_Counter implements PlugIn {
 		rt = Analyzer.getResultsTable();
 		double sum = 0;
 		for (int i = 0; i < rt.getCounter(); i++)
-			sum += rt.getValue(ResultsTable.AREA, i);
+			sum += rt.getValueAsDouble(ResultsTable.AREA, i);
 		IJ.write("");
 		IJ.write("Thresholded voxels: " + (int) sum);
 		IJ.write("Average voxels per slice:  " + IJ.d2s(sum / nslices, 2));
@@ -126,7 +126,7 @@ public class Voxel_Counter implements PlugIn {
 		}
 	}
 
-	boolean binaryImage(ImagePlus imp) {
+	private boolean binaryImage(ImagePlus imp) {
 		ImageStatistics stats = imp.getStatistics();
 		boolean isBinary = stats.histogram[0] + stats.histogram[255] == stats.pixelCount;
 		if (isBinary) {

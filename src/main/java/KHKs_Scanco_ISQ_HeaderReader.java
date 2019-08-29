@@ -23,11 +23,7 @@ import ij.plugin.PlugIn;
 /** This plugin implements the an header reader for Scanco ISQ files command. */
 public class KHKs_Scanco_ISQ_HeaderReader implements PlugIn {
 
-	int i, offset, offset1, offset2, offset3, xdimension, ydimension, zdimension, mu_scaling;
-
-	int tmpInt;
-	String nameStringInHeader = "";
-	float el_size_mm_x, el_size_mm_y, el_size_mm_z;
+	private String nameStringInHeader = "";
 
 	public void run(String arg) {
 
@@ -42,18 +38,18 @@ public class KHKs_Scanco_ISQ_HeaderReader implements PlugIn {
 			FileInputStream p = new FileInputStream(iFile);
 
 			p.skip(44);
-			xdimension = p.read() + p.read() * 256 + p.read() * 65536;
+			int xdimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			ydimension = p.read() + p.read() * 256 + p.read() * 65536;
+			int ydimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			zdimension = p.read() + p.read() * 256 + p.read() * 65536;
+			int zdimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
+			int tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
+			float el_size_mm_x = tmpInt / xdimension;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_x = tmpInt / xdimension;
+			float el_size_mm_y = tmpInt / ydimension;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_y = tmpInt / ydimension;
-			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			el_size_mm_z = tmpInt / zdimension;
+			float el_size_mm_z = tmpInt / zdimension;
 			el_size_mm_x = el_size_mm_x / 1000;
 			el_size_mm_y = el_size_mm_y / 1000;
 			el_size_mm_z = el_size_mm_z / 1000;
@@ -61,7 +57,7 @@ public class KHKs_Scanco_ISQ_HeaderReader implements PlugIn {
 			p.skip(20);
 			// 82 int mu_scaling;
 			tmpInt = (p.read() + p.read() * 256 + p.read() * 65536 + p.read() * 256 * 65536);
-			mu_scaling = tmpInt;
+			int mu_scaling = tmpInt;
 
 			p.skip(36); // war 60, wegen mu_scaling jetzt 36
 
@@ -73,7 +69,7 @@ public class KHKs_Scanco_ISQ_HeaderReader implements PlugIn {
 
 			p.skip(340);
 
-			offset = (p.read() + p.read() * 256 + p.read() * 65536 + 1) * 512;
+			int offset = (p.read() + p.read() * 256 + p.read() * 65536 + 1) * 512;
 			// System.out.println("offset from header: "+offset);
 
 			IJ.showMessage("Header Data:\n " + "\ninfo: " + nameStringInHeader + "\nmu_scaling: " + mu_scaling

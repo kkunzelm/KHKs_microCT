@@ -95,7 +95,7 @@ public final class LEDataInputStream implements DataInput {
 	 * @throws IOException
 	 *             if read fails.
 	 */
-	public final int read(byte ba[], int off, int len) throws IOException {
+	public final int read(byte[] ba, int off, int len) throws IOException {
 		// For efficiency, we avoid one layer of wrapper
 		return is.read(ba, off, len);
 	}
@@ -162,7 +162,7 @@ public final class LEDataInputStream implements DataInput {
 	 *
 	 * @see DataInput#readFully(byte[])
 	 */
-	public final void readFully(byte ba[]) throws IOException {
+	public final void readFully(byte[] ba) throws IOException {
 		dis.readFully(ba, 0, ba.length);
 	}
 
@@ -173,7 +173,7 @@ public final class LEDataInputStream implements DataInput {
 	 *             if read fails.
 	 * @see DataInput#readFully(byte[],int,int)
 	 */
-	public final void readFully(byte ba[], int off, int len) throws IOException {
+	public final void readFully(byte[] ba, int off, int len) throws IOException {
 		dis.readFully(ba, off, len);
 	}
 
@@ -194,7 +194,6 @@ public final class LEDataInputStream implements DataInput {
 	 *
 	 * @return a rough approximation of the 8-bit stream as a 16-bit unicode string
 	 * @throws IOException
-	 * @noinspection deprecation
 	 * @deprecated This method does not properly convert bytes to characters. Use a
 	 *             Reader instead with a little-endian encoding.
 	 */

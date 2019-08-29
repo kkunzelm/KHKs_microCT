@@ -12,16 +12,7 @@ import ij.plugin.PlugIn;
 /** This plugin implements the Acquire/Aim command. */
 public class Import_Aim_Header implements PlugIn {
 
-	private static String defaultDirectory = null;
-	int record = 0;
-	int recCount = 0;
-	int i, offset, offset1, offset2, offset3, xdimension, ydimension, zdimensions;
-	int xpos, ypos, zpos, aimtype;
-	int tmpInt;
-	float el_size_mm_x, el_size_mm_y, el_size_mm_z;
-	float tmp_float;
-	String typestring = null;
-	String logstring = null;
+	private String typestring = null;
 
 	public void run(String arg) {
 
@@ -35,41 +26,41 @@ public class Import_Aim_Header implements PlugIn {
 			File iFile = new File(directory + fileName);
 			FileInputStream p = new FileInputStream(iFile);
 
-			offset1 = p.read() + p.read() * 256 + p.read() * 65536;
+			int offset1 = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			offset2 = p.read() + p.read() * 256 + p.read() * 65536;
+			int offset2 = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			offset3 = p.read() + p.read() * 256 + p.read() * 65536;
+			int offset3 = p.read() + p.read() * 256 + p.read() * 65536;
 
 			p.skip(29);
-			aimtype = p.read() + p.read() * 256 + p.read() * 65536;
+			int aimtype = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			xpos = p.read() + p.read() * 256 + p.read() * 65536;
+			int xpos = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			ypos = p.read() + p.read() * 256 + p.read() * 65536;
+			int ypos = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			zpos = p.read() + p.read() * 256 + p.read() * 65536;
+			int zpos = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
 
 			// skip 45 without type and pos
-			xdimension = p.read() + p.read() * 256 + p.read() * 65536;
+			int xdimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			ydimension = p.read() + p.read() * 256 + p.read() * 65536;
+			int ydimension = p.read() + p.read() * 256 + p.read() * 65536;
 			p.skip(1);
-			zdimensions = p.read() + p.read() * 256 + p.read() * 65536;
+			int zdimensions = p.read() + p.read() * 256 + p.read() * 65536;
 
-			offset = offset1 + offset2 + offset3;
+			int offset = offset1 + offset2 + offset3;
 
 			p.skip(61);
 
 			// Find element size:
 
+			int tmpInt = (p.read() << 16) | (p.read() << 24) | p.read() | (p.read() << 8);
+			float el_size_mm_x = Float.intBitsToFloat(tmpInt) / 4;
 			tmpInt = (p.read() << 16) | (p.read() << 24) | p.read() | (p.read() << 8);
-			el_size_mm_x = Float.intBitsToFloat(tmpInt) / 4;
+			float el_size_mm_y = Float.intBitsToFloat(tmpInt) / 4;
 			tmpInt = (p.read() << 16) | (p.read() << 24) | p.read() | (p.read() << 8);
-			el_size_mm_y = Float.intBitsToFloat(tmpInt) / 4;
-			tmpInt = (p.read() << 16) | (p.read() << 24) | p.read() | (p.read() << 8);
-			el_size_mm_z = Float.intBitsToFloat(tmpInt) / 4;
+			float el_size_mm_z = Float.intBitsToFloat(tmpInt) / 4;
 
 			// skip assoc data pointer
 			p.skip(4);
