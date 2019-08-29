@@ -7,7 +7,7 @@ public class KHKs_Website implements PlugIn {
 
 		try {
 			BrowserLauncher
-					.openURL("http://www.dent.med.uni-muenchen.de/~kkunzelm/exponent-0.96.3/index.php?section=31");
+					.openURL("http://www.kunzelmann.de/6_software-1_introduction.html");
 		} catch (Throwable e) {
 			System.out.println("Could not open default internet browser");
 		}
